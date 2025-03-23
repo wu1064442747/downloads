@@ -346,6 +346,7 @@
                                         <option value="auto" selected>自动识别</option>
                                         <option value="jpg">强制JPG</option>
                                         <option value="png">强制PNG</option>
+                                        <option value="svg">保留SVG格式</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
@@ -1163,15 +1164,23 @@
                     extension = 'jpg';
                 } else if (formatOption === 'png') {
                     extension = 'png';
+                } else if (formatOption === 'svg') {
+                    // 如果用户选择了SVG格式，检查是否为SVG文件
+                    if (url.toLowerCase().endsWith('svg') || extension === 'svg') {
+                        extension = 'svg';
+                    } else {
+                        // 如果不是SVG，默认使用jpg
+                        extension = 'jpg';
+                    }
                 } else {
                     // 自动模式下，检查扩展名是否为常见图片格式
-                    const validImgExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+                    const validImgExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
                     if (!validImgExtensions.includes(extension)) {
                         extension = 'jpg'; // 默认使用jpg
                     }
                     
-                    // 强制将webp, gif, bmp等转换为jpg或png
-                    if (!['jpg', 'jpeg', 'png'].includes(extension)) {
+                    // 除非是svg格式，否则将webp, gif, bmp等转换为jpg或png
+                    if (extension !== 'svg' && !['jpg', 'jpeg', 'png'].includes(extension)) {
                         extension = 'jpg';
                     }
                 }
@@ -1188,6 +1197,9 @@
                 // 添加扩展名
                 filename = `${filename}.${extension}`;
                 
+                // 构建不含扩展名的文件名
+                let fileName = filename.substring(0, filename.lastIndexOf('.'));
+                
                 // 添加到压缩包
                 const promise = fetch(url)
                     .then(response => {
@@ -1199,8 +1211,16 @@
                                 const needConversion = (
                                     formatOption === 'jpg' || 
                                     formatOption === 'png' ||
-                                    (formatOption === 'auto' && !contentType.includes('image/jpeg') && !contentType.includes('image/png'))
+                                    (formatOption === 'auto' && !contentType.includes('image/jpeg') && !contentType.includes('image/png') && !contentType.includes('image/svg+xml'))
                                 );
+                                
+                                // 检查是否为SVG格式
+                                const isSvgFormat = extension === 'svg' || contentType.includes('image/svg+xml');
+                                
+                                // 如果是SVG格式且不是强制转换为JPG/PNG，则直接使用原始数据
+                                if (isSvgFormat && formatOption !== 'jpg' && formatOption !== 'png') {
+                                    return blob;
+                                }
                                 
                                 if (needConversion) {
                                     return new Promise(resolve => {
@@ -1453,6 +1473,7 @@
             formatSelect.innerHTML = `
                 <option value="image/jpeg" selected>JPG</option>
                 <option value="image/png">PNG</option>
+                <option value="image/svg+xml">SVG</option>
             `;
             
             // 如果不存在已添加过的格式选择器，则添加
@@ -1491,6 +1512,30 @@
                         finalHeight = Math.round(finalWidth * originalRatio);
                     }
                     
+                    // 如果是SVG格式，不使用Canvas处理
+                    if (outputFormat === 'image/svg+xml') {
+                        // 对于SVG，不进行尺寸调整，直接使用原始文件
+                        // SVG是矢量格式，可以在浏览器中自动缩放
+                        // 如果需要调整SVG的尺寸，可以通过修改viewBox或添加width/height属性
+                        const svgFile = file;
+                        const svgUrl = URL.createObjectURL(svgFile);
+                        
+                        results.push({
+                            original: file,
+                            resized: svgFile, // 使用原始SVG文件
+                            name: file.name,
+                            url: svgUrl,
+                            width: finalWidth,
+                            height: finalHeight,
+                            mimeType: 'image/svg+xml'
+                        });
+                        
+                        // 更新成功统计
+                        resizedSuccessCount++;
+                        updateStats('resize');
+                        continue; // 跳过Canvas处理
+                    }
+                    
                     // 创建Canvas进行尺寸调整
                     const canvas = document.createElement('canvas');
                     canvas.width = finalWidth;
@@ -1509,9 +1554,17 @@
                     });
                     
                     // 确定文件扩展名
-                    const extension = outputFormat === 'image/png' ? '.png' : '.jpg';
+                    let extension;
+                    if (outputFormat === 'image/png') {
+                        extension = '.png';
+                    } else if (outputFormat === 'image/svg+xml') {
+                        extension = '.svg';
+                    } else {
+                        extension = '.jpg';
+                    }
+                    
                     // 构建不含扩展名的文件名
-                    let fileName = file.name;
+                    let fileName = file.name.substring(0, file.name.lastIndexOf('.'));
                     // 移除原始扩展名
                     if (fileName.lastIndexOf('.') !== -1) {
                         fileName = fileName.substring(0, fileName.lastIndexOf('.'));
