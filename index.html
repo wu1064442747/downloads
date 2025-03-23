@@ -1520,8 +1520,7 @@
                     results.push({
                         original: file,
                         resized: blob,
-                        name: fileName + extension,
-                        originalName: file.name,
+                        name: file.name,
                         url: URL.createObjectURL(blob),
                         width: finalWidth,
                         height: finalHeight,
@@ -1601,7 +1600,7 @@
                 const downloadBtn = document.createElement('a');
                 downloadBtn.href = item.url;
                 downloadBtn.className = 'btn btn-sm btn-outline-primary';
-                downloadBtn.download = `resized_${item.name}`;
+                downloadBtn.download = item.name;
                 downloadBtn.innerHTML = '<i class="bi bi-download"></i> 下载';
                 
                 imgContainer.appendChild(img);
@@ -1644,7 +1643,7 @@
             const folder = zip.folder("resized_images");
             
             resizedImages.forEach((item, index) => {
-                folder.file(`resized_${item.name}`, item.resized);
+                folder.file(item.name, item.resized);
             });
             
             zip.generateAsync({type:"blob"})
