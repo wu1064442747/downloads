@@ -575,33 +575,52 @@
         let resizedFailCount = 0;
 
         function updateStats(mode = 'games') {
-            if (mode === 'games') {
-                document.getElementById('totalGames').textContent = totalGames;
-                document.getElementById('successCount').textContent = successCount;
-                document.getElementById('failCount').textContent = failCount;
+            try {
+                // 检查元素是否存在，如果不存在则给出错误提示
+                const totalElement = document.getElementById('totalGames');
+                const successElement = document.getElementById('successCount');
+                const failElement = document.getElementById('failCount');
                 
-                // 更新标签文本
-                document.querySelector('.stat-label:nth-child(2)').textContent = '总游戏数';
-                document.querySelector('.stat-label:nth-child(4)').textContent = '成功获取';
-                document.querySelector('.stat-label:nth-child(6)').textContent = '获取失败';
-            } else if (mode === 'images') {
-                document.getElementById('totalGames').textContent = totalImages;
-                document.getElementById('successCount').textContent = downloadedImages;
-                document.getElementById('failCount').textContent = failedImages;
+                if (!totalElement || !successElement || !failElement) {
+                    console.error('统计信息元素不存在！请检查HTML结构。');
+                    console.log('缺少的元素:', 
+                        !totalElement ? 'totalGames' : '', 
+                        !successElement ? 'successCount' : '', 
+                        !failElement ? 'failCount' : '');
+                    return;
+                }
                 
-                // 更新标签文本
-                document.querySelector('.stat-label:nth-child(2)').textContent = '总图片数';
-                document.querySelector('.stat-label:nth-child(4)').textContent = '已下载';
-                document.querySelector('.stat-label:nth-child(6)').textContent = '下载失败';
-            } else if (mode === 'resize') {
-                document.getElementById('totalGames').textContent = totalResizeImages;
-                document.getElementById('successCount').textContent = resizedSuccessCount;
-                document.getElementById('failCount').textContent = resizedFailCount;
-                
-                // 更新标签文本
-                document.querySelector('.stat-label:nth-child(2)').textContent = '总图片数';
-                document.querySelector('.stat-label:nth-child(4)').textContent = '调整成功';
-                document.querySelector('.stat-label:nth-child(6)').textContent = '调整失败';
+                // 根据不同模式更新统计数据
+                if (mode === 'games') {
+                    totalElement.textContent = totalGames;
+                    successElement.textContent = successCount;
+                    failElement.textContent = failCount;
+                    
+                    // 更新标签文本
+                    document.querySelector('.stat-label:nth-child(2)').textContent = '总游戏数';
+                    document.querySelector('.stat-label:nth-child(4)').textContent = '成功获取';
+                    document.querySelector('.stat-label:nth-child(6)').textContent = '获取失败';
+                } else if (mode === 'images') {
+                    totalElement.textContent = totalImages;
+                    successElement.textContent = downloadedImages;
+                    failElement.textContent = failedImages;
+                    
+                    // 更新标签文本
+                    document.querySelector('.stat-label:nth-child(2)').textContent = '总图片数';
+                    document.querySelector('.stat-label:nth-child(4)').textContent = '已下载';
+                    document.querySelector('.stat-label:nth-child(6)').textContent = '下载失败';
+                } else if (mode === 'resize') {
+                    totalElement.textContent = totalResizeImages;
+                    successElement.textContent = resizedSuccessCount;
+                    failElement.textContent = resizedFailCount;
+                    
+                    // 更新标签文本
+                    document.querySelector('.stat-label:nth-child(2)').textContent = '总图片数';
+                    document.querySelector('.stat-label:nth-child(4)').textContent = '调整成功';
+                    document.querySelector('.stat-label:nth-child(6)').textContent = '调整失败';
+                }
+            } catch (error) {
+                console.error('更新统计信息时出错:', error);
             }
         }
 
