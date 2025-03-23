@@ -834,6 +834,10 @@
                         if (src && !src.startsWith('data:')) {
                             // 查找图片下方的命名div
                             let name = '';
+                            
+                            // 调试信息 - 记录初始状态
+                            console.log('开始查找图片名称:', src);
+                            
                             // 先检查父元素的下一个兄弟元素是否含有name类
                             const parent = img.parentElement;
                             if (parent) {
@@ -843,6 +847,7 @@
                                     const child = parent.children[i];
                                     if (foundImg && child.classList && child.classList.contains('name')) {
                                         name = child.textContent.trim();
+                                        console.log('找到名称(方法1-父元素子元素):', name);
                                         break;
                                     }
                                     if (child === img) {
@@ -855,9 +860,82 @@
                                     const nextSibling = parent.nextElementSibling;
                                     if (nextSibling.classList && nextSibling.classList.contains('name')) {
                                         name = nextSibling.textContent.trim();
+                                        console.log('找到名称(方法2-父元素兄弟):', name);
+                                    }
+                                }
+                                
+                                // 如果仍然没找到，向上查找更多的父级元素和兄弟元素
+                                if (!name) {
+                                    // 检查祖父元素的子元素中是否有name类
+                                    const grandParent = parent.parentElement;
+                                    if (grandParent) {
+                                        // 查找父元素之后的兄弟元素中的name类
+                                        let foundParent = false;
+                                        for (let i = 0; i < grandParent.children.length; i++) {
+                                            const child = grandParent.children[i];
+                                            if (foundParent && child.classList && child.classList.contains('name')) {
+                                                name = child.textContent.trim();
+                                                console.log('找到名称(方法3-祖父元素子元素):', name);
+                                                break;
+                                            }
+                                            if (child === parent) {
+                                                foundParent = true;
+                                            }
+                                        }
+                                        
+                                        // 检查img的兄弟元素的子元素是否有name类
+                                        if (!name) {
+                                            const siblings = Array.from(parent.parentElement.children);
+                                            for (const sibling of siblings) {
+                                                if (sibling !== parent) {
+                                                    const nameDiv = sibling.querySelector('.name');
+                                                    if (nameDiv) {
+                                                        name = nameDiv.textContent.trim();
+                                                        console.log('找到名称(方法4-兄弟元素子元素):', name);
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
+                            
+                            // 如果所有方法都失败，尝试在整个文档中查找最近的name类元素
+                            if (!name) {
+                                const allNameDivs = doc.querySelectorAll('.name');
+                                console.log('找到所有name元素数量:', allNameDivs.length);
+                                
+                                if (allNameDivs.length > 0) {
+                                    // 找到与当前图片最接近的name元素
+                                    let closestNameDiv = null;
+                                    let minDistance = Infinity;
+                                    
+                                    // 遍历所有name元素，找到最近的一个
+                                    for (const nameDiv of allNameDivs) {
+                                        // 计算简单的"接近度"（只考虑文档顺序）
+                                        // 在实际浏览器环境中，可以使用getBoundingClientRect()计算真实距离
+                                        const distance = Math.abs(
+                                            Array.from(doc.querySelectorAll('*')).indexOf(nameDiv) - 
+                                            Array.from(doc.querySelectorAll('*')).indexOf(img)
+                                        );
+                                        
+                                        console.log('name元素距离:', nameDiv.textContent.trim(), distance);
+                                        
+                                        if (distance < minDistance) {
+                                            minDistance = distance;
+                                            closestNameDiv = nameDiv;
+                                        }
+                                    }
+                                    
+                                    if (closestNameDiv && minDistance < 20) { // 设置一个合理的阈值
+                                        name = closestNameDiv.textContent.trim();
+                                        console.log('找到名称(方法5-最近name元素):', name, '距离:', minDistance);
+                                    }
+                                }
+                            }
+                            
+                            console.log('最终使用名称:', name || `image_${imageLinks.length + 1}`);
                             
                             // 存储图片URL和名称
                             imageLinks.push({
@@ -975,6 +1053,9 @@
                 if (!filename.trim()) {
                     filename = `image_${index + 1}`;
                 }
+                
+                console.log(`下载图片: ${url}, 使用名称: ${filename}`);
+                
                 // 添加扩展名
                 filename = `${filename}.${extension}`;
                 
