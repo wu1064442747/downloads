@@ -563,11 +563,46 @@
         let totalGames = 0;
         let successCount = 0;
         let failCount = 0;
+        
+        // 图片下载器统计信息
+        let totalImages = 0;
+        let downloadedImages = 0;
+        let failedImages = 0;
+        
+        // 图片尺寸调整统计信息
+        let totalResizeImages = 0;
+        let resizedSuccessCount = 0;
+        let resizedFailCount = 0;
 
-        function updateStats() {
-            document.getElementById('totalGames').textContent = totalGames;
-            document.getElementById('successCount').textContent = successCount;
-            document.getElementById('failCount').textContent = failCount;
+        function updateStats(mode = 'games') {
+            if (mode === 'games') {
+                document.getElementById('totalGames').textContent = totalGames;
+                document.getElementById('successCount').textContent = successCount;
+                document.getElementById('failCount').textContent = failCount;
+                
+                // 更新标签文本
+                document.querySelector('.stat-label:nth-child(2)').textContent = '总游戏数';
+                document.querySelector('.stat-label:nth-child(4)').textContent = '成功获取';
+                document.querySelector('.stat-label:nth-child(6)').textContent = '获取失败';
+            } else if (mode === 'images') {
+                document.getElementById('totalGames').textContent = totalImages;
+                document.getElementById('successCount').textContent = downloadedImages;
+                document.getElementById('failCount').textContent = failedImages;
+                
+                // 更新标签文本
+                document.querySelector('.stat-label:nth-child(2)').textContent = '总图片数';
+                document.querySelector('.stat-label:nth-child(4)').textContent = '已下载';
+                document.querySelector('.stat-label:nth-child(6)').textContent = '下载失败';
+            } else if (mode === 'resize') {
+                document.getElementById('totalGames').textContent = totalResizeImages;
+                document.getElementById('successCount').textContent = resizedSuccessCount;
+                document.getElementById('failCount').textContent = resizedFailCount;
+                
+                // 更新标签文本
+                document.querySelector('.stat-label:nth-child(2)').textContent = '总图片数';
+                document.querySelector('.stat-label:nth-child(4)').textContent = '调整成功';
+                document.querySelector('.stat-label:nth-child(6)').textContent = '调整失败';
+            }
         }
 
         async function fetchWithCORS(url) {
@@ -766,6 +801,22 @@
 
         // 页面加载时显示历史记录
         updateHistoryTable();
+        
+        // 根据初始激活的导航项设置统计模式
+        const activeNav = document.querySelector('.nav-link.active');
+        if (activeNav) {
+            const targetId = activeNav.getAttribute('data-target');
+            if (targetId === 'html5games-section') {
+                updateStats('games');
+            } else if (targetId === 'image-downloader-section') {
+                updateStats('images');
+            } else if (targetId === 'image-resize-section') {
+                updateStats('resize');
+            }
+        } else {
+            // 默认显示游戏统计
+            updateStats('games');
+        }
 
         // 导航切换功能
         document.querySelectorAll('.nav-link').forEach(link => {
@@ -789,6 +840,15 @@
                     // 显示目标内容区域
                     const targetId = this.getAttribute('data-target');
                     document.getElementById(targetId).style.display = 'block';
+                    
+                    // 根据当前显示的内容更新统计信息
+                    if (targetId === 'html5games-section') {
+                        updateStats('games');
+                    } else if (targetId === 'image-downloader-section') {
+                        updateStats('images');
+                    } else if (targetId === 'image-resize-section') {
+                        updateStats('resize');
+                    }
                 });
             }
         });
@@ -819,6 +879,11 @@
             noPreview.style.display = 'block';
             imageLinks = [];
             
+            // 重置图片统计
+            totalImages = 0;
+            downloadedImages = 0;
+            failedImages = 0;
+            updateStats('images');
             try {
                 // 获取网页内容
                 const html = await fetchWithCORS(imageUrl);
@@ -966,6 +1031,10 @@
                 
                 progressBar.style.width = '100%';
                 progressBar.classList.add('bg-success');
+                
+                // 更新图片统计
+                totalImages = imageLinks.length;
+                updateStats('images');
                 
                 // 显示结果
                 result.style.display = 'block';
@@ -1167,6 +1236,11 @@
             Promise.all(downloadPromises).then(results => {
                 const successCount = results.filter(Boolean).length;
                 
+                // 更新图片统计信息
+                downloadedImages = successCount;
+                failedImages = items.length - successCount;
+                updateStats('images');
+                
                 zip.generateAsync({type:"blob"})
                     .then(function(content) {
                         // 使用FileSaver库下载
@@ -1280,6 +1354,12 @@
                 uploadedImages = Array.from(e.target.files);
                 document.getElementById('resizeBtn').disabled = false;
                 
+                // 重置尺寸调整统计
+                totalResizeImages = uploadedImages.length;
+                resizedSuccessCount = 0;
+                resizedFailCount = 0;
+                updateStats('resize');
+                
                 // 如果选择了保持原图比例，更新高度
                 const selectedRatio = document.querySelector('input[name="aspectRatio"]:checked').value;
                 if (selectedRatio === "original") {
@@ -1320,6 +1400,9 @@
                     updateResizedImagesPreview();
                     progressBar.style.width = '100%';
                     progressBar.classList.add('bg-success');
+                    
+                    // 最终更新统计信息
+                    updateStats('resize');
                 })
                 .catch(error => {
                     console.error('调整尺寸时发生错误:', error);
@@ -1337,6 +1420,12 @@
             const progress = document.getElementById('resizeProgress');
             const progressBar = progress.querySelector('.progress-bar');
             const selectedRatio = document.querySelector('input[name="aspectRatio"]:checked').value;
+            
+            // 重置统计
+            resizedSuccessCount = 0;
+            resizedFailCount = 0;
+            totalResizeImages = images.length;
+            updateStats('resize');
             
             // 添加格式选择功能
             const formatSelect = document.createElement('select');
@@ -1419,8 +1508,16 @@
                         height: finalHeight,
                         mimeType: outputFormat
                     });
+                    
+                    // 更新成功统计
+                    resizedSuccessCount++;
+                    updateStats('resize');
                 } catch (error) {
                     console.error(`调整图片 ${file.name} 失败:`, error);
+                    
+                    // 更新失败统计
+                    resizedFailCount++;
+                    updateStats('resize');
                 }
             }
             
