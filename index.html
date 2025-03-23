@@ -1478,74 +1478,8 @@
             totalResizeImages = images.length;
             updateStats('resize');
             
-            // 添加格式选择功能
-            const formatSelect = document.createElement('select');
-            formatSelect.id = 'formatSelect';
-            formatSelect.className = 'form-select form-select-sm';
-            formatSelect.innerHTML = `
-                <option value="image/jpeg" selected>JPG</option>
-                <option value="image/png">PNG</option>
-                <option value="image/svg+xml">SVG</option>
-            `;
-            
-            // 添加后缀名选择功能
-            const extensionSelect = document.createElement('select');
-            extensionSelect.id = 'extensionSelect';
-            extensionSelect.className = 'form-select form-select-sm';
-            extensionSelect.innerHTML = `
-                <option value="auto" selected>使用默认后缀</option>
-                <option value="original">保留原始后缀</option>
-                <option value="jpg">使用.jpg后缀</option>
-                <option value="jpeg">使用.jpeg后缀</option>
-                <option value="png">使用.png后缀</option>
-                <option value="svg">使用.svg后缀</option>
-                <option value="webp">使用.webp后缀</option>
-                <option value="custom">自定义后缀</option>
-            `;
-            
-            // 自定义后缀输入框
-            const customExtensionInput = document.createElement('input');
-            customExtensionInput.id = 'customExtensionInput';
-            customExtensionInput.className = 'form-control form-control-sm mt-2';
-            customExtensionInput.placeholder = '输入自定义后缀（不含点号）';
-            customExtensionInput.style.display = 'none';
-            
-            // 如果不存在已添加过的格式选择器，则添加
-            if (!document.getElementById('formatSelect')) {
-                const formatContainer = document.createElement('div');
-                formatContainer.className = 'mb-3';
-                formatContainer.innerHTML = `
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label for="formatSelect" class="form-label">输出格式</label>
-                            <div id="formatSelectContainer"></div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="extensionSelect" class="form-label">输出文件后缀</label>
-                            <div id="extensionSelectContainer"></div>
-                        </div>
-                    </div>
-                `;
-                
-                const resizeBtn = document.getElementById('resizeBtn');
-                resizeBtn.parentNode.insertBefore(formatContainer, resizeBtn);
-                
-                document.getElementById('formatSelectContainer').appendChild(formatSelect);
-                document.getElementById('extensionSelectContainer').appendChild(extensionSelect);
-                document.getElementById('extensionSelectContainer').appendChild(customExtensionInput);
-                
-                // 添加后缀选择事件监听
-                extensionSelect.addEventListener('change', function() {
-                    if (this.value === 'custom') {
-                        customExtensionInput.style.display = 'block';
-                    } else {
-                        customExtensionInput.style.display = 'none';
-                    }
-                });
-            }
-            
             // 获取所选格式
-            const outputFormat = document.getElementById('formatSelect').value;
+            const outputFormat = document.getElementById('formatSelect')?.value || 'image/jpeg';
             
             for (let i = 0; i < images.length; i++) {
                 const file = images[i];
@@ -1820,6 +1754,100 @@
                         saveAs(content, "images.zip");
                     }
                 });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 页面加载时初始化后缀选择功能
+            initExtensionSelect();
+            
+            // 页面加载时显示历史记录
+            updateHistoryTable();
+            
+            // 根据初始激活的导航项设置统计模式
+            const activeNav = document.querySelector('.nav-link.active');
+            if (activeNav) {
+                const targetId = activeNav.getAttribute('data-target');
+                if (targetId === 'html5games-section') {
+                    updateStats('games');
+                } else if (targetId === 'image-downloader-section') {
+                    updateStats('images');
+                } else if (targetId === 'image-resize-section') {
+                    updateStats('resize');
+                }
+            } else {
+                // 默认显示游戏统计
+                updateStats('games');
+            }
+        });
+        
+        // 初始化文件后缀选择功能
+        function initExtensionSelect() {
+            // 添加格式选择功能
+            const formatSelect = document.createElement('select');
+            formatSelect.id = 'formatSelect';
+            formatSelect.className = 'form-select';
+            formatSelect.innerHTML = `
+                <option value="image/jpeg" selected>JPG</option>
+                <option value="image/png">PNG</option>
+                <option value="image/svg+xml">SVG</option>
+            `;
+            
+            // 添加后缀名选择功能
+            const extensionSelect = document.createElement('select');
+            extensionSelect.id = 'extensionSelect';
+            extensionSelect.className = 'form-select';
+            extensionSelect.innerHTML = `
+                <option value="auto" selected>使用默认后缀</option>
+                <option value="original">保留原始后缀</option>
+                <option value="jpg">使用.jpg后缀</option>
+                <option value="jpeg">使用.jpeg后缀</option>
+                <option value="png">使用.png后缀</option>
+                <option value="svg">使用.svg后缀</option>
+                <option value="webp">使用.webp后缀</option>
+                <option value="custom">自定义后缀</option>
+            `;
+            
+            // 自定义后缀输入框
+            const customExtensionInput = document.createElement('input');
+            customExtensionInput.id = 'customExtensionInput';
+            customExtensionInput.className = 'form-control form-control-sm mt-2';
+            customExtensionInput.placeholder = '输入自定义后缀（不含点号）';
+            customExtensionInput.style.display = 'none';
+            
+            // 添加到页面
+            const formatContainer = document.createElement('div');
+            formatContainer.className = 'row mb-3';
+            formatContainer.innerHTML = `
+                <div class="col-md-6">
+                    <label for="formatSelect" class="form-label">输出格式</label>
+                    <div id="formatSelectContainer"></div>
+                </div>
+                <div class="col-md-6">
+                    <label for="extensionSelect" class="form-label">输出文件后缀</label>
+                    <div id="extensionSelectContainer"></div>
+                </div>
+            `;
+            
+            // 插入到比例选择和调整尺寸按钮之间
+            const ratioContainer = document.querySelector('input[name="aspectRatio"]').closest('.mb-3');
+            const resizeProgress = document.getElementById('resizeProgress');
+            
+            if (ratioContainer && resizeProgress) {
+                ratioContainer.parentNode.insertBefore(formatContainer, resizeProgress);
+                
+                document.getElementById('formatSelectContainer').appendChild(formatSelect);
+                document.getElementById('extensionSelectContainer').appendChild(extensionSelect);
+                document.getElementById('extensionSelectContainer').appendChild(customExtensionInput);
+                
+                // 添加后缀选择事件监听
+                extensionSelect.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        customExtensionInput.style.display = 'block';
+                    } else {
+                        customExtensionInput.style.display = 'none';
+                    }
+                });
+            }
         }
     </script>
 </body>
