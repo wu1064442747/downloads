@@ -1640,7 +1640,7 @@
 
         function downloadResizedImages() {
             const zip = new JSZip();
-            const folder = zip.folder("resized_images");
+            const folder = zip.folder("images");
             
             resizedImages.forEach((item, index) => {
                 folder.file(item.name, item.resized);
@@ -1653,11 +1653,11 @@
                         const script = document.createElement('script');
                         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js';
                         script.onload = function() {
-                            saveAs(content, "resized_images.zip");
+                            saveAs(content, "images.zip");
                         };
                         document.head.appendChild(script);
                     } else {
-                        saveAs(content, "resized_images.zip");
+                        saveAs(content, "images.zip");
                     }
                 });
         }
