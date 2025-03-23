@@ -339,6 +339,24 @@
                                 <label for="imageUrlInput" class="form-label">目标网页URL</label>
                                 <input type="text" class="form-control" id="imageUrlInput" placeholder="https://example.com">
                             </div>
+                            <div class="row mb-3">
+                                <div class="col-md-9">
+                                    <label for="imageFormat" class="form-label">保存图片格式</label>
+                                    <select class="form-select" id="imageFormat">
+                                        <option value="auto" selected>自动识别</option>
+                                        <option value="jpg">强制JPG</option>
+                                        <option value="png">强制PNG</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="jpgQuality" class="form-label">JPG质量</label>
+                                    <select class="form-select" id="jpgQuality">
+                                        <option value="0.7">低</option>
+                                        <option value="0.85" selected>中</option>
+                                        <option value="0.95">高</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="text-center mb-4">
                                 <button id="startImageBtn" class="btn btn-primary">
                                     <i class="bi bi-search me-2"></i>获取图片链接
@@ -1042,10 +1060,33 @@
             const folder = zip.folder("images");
             const downloadPromises = [];
             
+            // 获取用户选择的格式和质量
+            const formatOption = document.getElementById('imageFormat').value;
+            const jpgQuality = parseFloat(document.getElementById('jpgQuality').value);
+            
             items.forEach((item, index) => {
                 // 获取文件扩展名
                 const url = item.url;
-                const extension = url.split('.').pop().split('?')[0] || 'jpg';
+                // 先从URL尝试获取扩展名
+                let extension = url.split('.').pop().split('?')[0].toLowerCase();
+                
+                // 根据用户选择设置扩展名
+                if (formatOption === 'jpg') {
+                    extension = 'jpg';
+                } else if (formatOption === 'png') {
+                    extension = 'png';
+                } else {
+                    // 自动模式下，检查扩展名是否为常见图片格式
+                    const validImgExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+                    if (!validImgExtensions.includes(extension)) {
+                        extension = 'jpg'; // 默认使用jpg
+                    }
+                    
+                    // 强制将webp, gif, bmp等转换为jpg或png
+                    if (!['jpg', 'jpeg', 'png'].includes(extension)) {
+                        extension = 'jpg';
+                    }
+                }
                 
                 // 处理文件名，移除非法字符
                 let filename = item.name.replace(/[\\/:*?"<>|]/g, '_');
@@ -1054,7 +1095,7 @@
                     filename = `image_${index + 1}`;
                 }
                 
-                console.log(`下载图片: ${url}, 使用名称: ${filename}`);
+                console.log(`下载图片: ${url}, 使用名称: ${filename}, 格式: ${extension}`);
                 
                 // 添加扩展名
                 filename = `${filename}.${extension}`;
@@ -1062,7 +1103,49 @@
                 // 添加到压缩包
                 const promise = fetch(url)
                     .then(response => {
-                        if (response.ok) return response.blob();
+                        if (response.ok) {
+                            // 获取Content-Type
+                            const contentType = response.headers.get('content-type');
+                            return response.blob().then(blob => {
+                                // 根据用户选择决定是否需要转换
+                                const needConversion = (
+                                    formatOption === 'jpg' || 
+                                    formatOption === 'png' ||
+                                    (formatOption === 'auto' && !contentType.includes('image/jpeg') && !contentType.includes('image/png'))
+                                );
+                                
+                                if (needConversion) {
+                                    return new Promise(resolve => {
+                                        const img = new Image();
+                                        img.onload = () => {
+                                            const canvas = document.createElement('canvas');
+                                            canvas.width = img.width;
+                                            canvas.height = img.height;
+                                            const ctx = canvas.getContext('2d');
+                                            ctx.drawImage(img, 0, 0);
+                                            
+                                            // 根据用户选择输出格式
+                                            let outputFormat;
+                                            if (formatOption === 'jpg') {
+                                                outputFormat = 'image/jpeg';
+                                            } else if (formatOption === 'png') {
+                                                outputFormat = 'image/png';
+                                            } else {
+                                                // 自动模式
+                                                outputFormat = extension === 'png' ? 'image/png' : 'image/jpeg';
+                                            }
+                                            
+                                            // 设置质量参数，仅用于JPG
+                                            const quality = outputFormat === 'image/jpeg' ? jpgQuality : undefined;
+                                            canvas.toBlob(resolve, outputFormat, quality);
+                                        };
+                                        img.onerror = () => resolve(blob); // 转换失败时使用原图
+                                        img.src = URL.createObjectURL(blob);
+                                    });
+                                }
+                                return blob;
+                            });
+                        }
                         throw new Error(`无法下载图片: ${url}`);
                     })
                     .then(blob => {
@@ -1255,6 +1338,31 @@
             const progressBar = progress.querySelector('.progress-bar');
             const selectedRatio = document.querySelector('input[name="aspectRatio"]:checked').value;
             
+            // 添加格式选择功能
+            const formatSelect = document.createElement('select');
+            formatSelect.id = 'formatSelect';
+            formatSelect.className = 'form-select form-select-sm';
+            formatSelect.innerHTML = `
+                <option value="image/jpeg" selected>JPG</option>
+                <option value="image/png">PNG</option>
+            `;
+            
+            // 如果不存在已添加过的格式选择器，则添加
+            if (!document.getElementById('formatSelect')) {
+                const formatContainer = document.createElement('div');
+                formatContainer.className = 'mb-3';
+                formatContainer.innerHTML = `
+                    <label for="formatSelect" class="form-label">输出格式</label>
+                `;
+                formatContainer.appendChild(formatSelect);
+                
+                const resizeBtn = document.getElementById('resizeBtn');
+                resizeBtn.parentNode.insertBefore(formatContainer, resizeBtn);
+            }
+            
+            // 获取所选格式
+            const outputFormat = document.getElementById('formatSelect').value;
+            
             for (let i = 0; i < images.length; i++) {
                 const file = images[i];
                 // 更新进度条
@@ -1284,18 +1392,32 @@
                     // 绘制图片到Canvas
                     ctx.drawImage(image, 0, 0, finalWidth, finalHeight);
                     
-                    // 获取调整后的图片
+                    // 获取调整后的图片，强制使用JPG或PNG格式
                     const blob = await new Promise(resolve => {
-                        canvas.toBlob(resolve, file.type || 'image/jpeg');
+                        // 使用选择的格式，或者默认为JPEG
+                        const mimeType = outputFormat || 'image/jpeg';
+                        const quality = mimeType === 'image/jpeg' ? 0.9 : undefined; // JPEG需要压缩质量参数
+                        canvas.toBlob(resolve, mimeType, quality);
                     });
+                    
+                    // 确定文件扩展名
+                    const extension = outputFormat === 'image/png' ? '.png' : '.jpg';
+                    // 构建不含扩展名的文件名
+                    let fileName = file.name;
+                    // 移除原始扩展名
+                    if (fileName.lastIndexOf('.') !== -1) {
+                        fileName = fileName.substring(0, fileName.lastIndexOf('.'));
+                    }
                     
                     results.push({
                         original: file,
                         resized: blob,
-                        name: file.name,
+                        name: fileName + extension,
+                        originalName: file.name,
                         url: URL.createObjectURL(blob),
                         width: finalWidth,
-                        height: finalHeight
+                        height: finalHeight,
+                        mimeType: outputFormat
                     });
                 } catch (error) {
                     console.error(`调整图片 ${file.name} 失败:`, error);
