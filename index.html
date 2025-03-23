@@ -1221,71 +1221,45 @@
                                 
                                 // 如果是SVG格式，检查内容并处理
                                 if (isSvgFormat) {
-                                    return blob.text().then(text => {
-                                        // 检查文本内容是否包含SVG标记
-                                        const isSvgContent = text.trim().startsWith('<svg') || 
-                                                          text.includes('<svg ') || 
-                                                          (text.includes('<?xml') && text.includes('<svg'));
-                                        
-                                        if (isSvgContent) {
-                                            console.log('确认为SVG内容，保留SVG格式');
-                                            
-                                            // 确认为SVG，更新文件扩展名为svg
-                                            extension = 'svg';
-                                            const filenameBase = filename.substring(0, filename.lastIndexOf('.') > 0 ? filename.lastIndexOf('.') : filename.length);
-                                            filename = filenameBase + '.svg';
-                                            
-                                            console.log('文件将保存为:', filename);
-                                            
-                                            // 创建新的SVG blob
-                                            return new Blob([text], {type: 'image/svg+xml'});
-                                        } else {
-                                            console.log('内容不是SVG格式，使用默认处理');
-                                            return blob;
-                                        }
-                                    }).catch(err => {
-                                        console.error('SVG内容检测失败:', err);
-                                        return blob;
-                                    });
+                                    console.log('确认为SVG内容，保留SVG格式');
+                                    
+                                    // 获取用户指定的扩展名
+                                    const extensionOption = document.getElementById('extensionSelect').value;
+                                    
+                                    // 确定文件扩展名
+                                    let extension;
+                                    if (extensionOption === 'auto') {
+                                        extension = '.svg'; // SVG格式默认使用.svg扩展名
+                                    } else if (extensionOption === 'original') {
+                                        // 获取原始文件的扩展名
+                                        const originalExt = item.name.split('.').pop();
+                                        extension = originalExt ? '.' + originalExt : '.svg';
+                                    } else if (extensionOption === 'custom') {
+                                        // 使用用户自定义的扩展名
+                                        const customExt = document.getElementById('customExtensionInput').value.trim();
+                                        extension = customExt ? '.' + customExt.replace(/^\./, '') : '.svg';
+                                    } else {
+                                        // 使用用户选择的预设扩展名
+                                        extension = '.' + extensionOption;
+                                    }
+                                    
+                                    // 构建不含扩展名的文件名
+                                    let fileName = item.name.substring(0, item.name.lastIndexOf('.'));
+                                    // 移除原始扩展名
+                                    if (fileName.lastIndexOf('.') !== -1) {
+                                        fileName = fileName.substring(0, fileName.lastIndexOf('.'));
+                                    }
+                                    
+                                    // 完整的文件名（带新扩展名）
+                                    const newFileName = fileName + extension;
+                                    
+                                    return new Blob([text], {type: 'image/svg+xml'});
+                                } else {
+                                    console.log('内容不是SVG格式，使用默认处理');
+                                    return blob;
                                 }
-                                
-                                // 根据用户选择决定是否需要格式转换
-                                const needConversion = (
-                                    formatOption === 'jpg' || 
-                                    formatOption === 'png' ||
-                                    (formatOption === 'auto' && !contentType.includes('image/jpeg') && !contentType.includes('image/png'))
-                                );
-                                
-                                if (needConversion) {
-                                    return new Promise(resolve => {
-                                        const img = new Image();
-                                        img.onload = () => {
-                                            const canvas = document.createElement('canvas');
-                                            canvas.width = img.width;
-                                            canvas.height = img.height;
-                                            const ctx = canvas.getContext('2d');
-                                            ctx.drawImage(img, 0, 0);
-                                            
-                                            // 根据用户选择输出格式
-                                            let outputFormat;
-                                            if (formatOption === 'jpg') {
-                                                outputFormat = 'image/jpeg';
-                                            } else if (formatOption === 'png') {
-                                                outputFormat = 'image/png';
-                                            } else {
-                                                // 自动模式
-                                                outputFormat = extension === 'png' ? 'image/png' : 'image/jpeg';
-                                            }
-                                            
-                                            // 设置质量参数，仅用于JPG
-                                            const quality = outputFormat === 'image/jpeg' ? jpgQuality : undefined;
-                                            canvas.toBlob(resolve, outputFormat, quality);
-                                        };
-                                        img.onerror = () => resolve(blob); // 转换失败时使用原图
-                                        img.src = URL.createObjectURL(blob);
-                                    });
-                                }
-                                
+                            }).catch(err => {
+                                console.error('SVG内容检测失败:', err);
                                 return blob;
                             });
                         }
@@ -1514,17 +1488,60 @@
                 <option value="image/svg+xml">SVG</option>
             `;
             
+            // 添加后缀名选择功能
+            const extensionSelect = document.createElement('select');
+            extensionSelect.id = 'extensionSelect';
+            extensionSelect.className = 'form-select form-select-sm';
+            extensionSelect.innerHTML = `
+                <option value="auto" selected>使用默认后缀</option>
+                <option value="original">保留原始后缀</option>
+                <option value="jpg">使用.jpg后缀</option>
+                <option value="jpeg">使用.jpeg后缀</option>
+                <option value="png">使用.png后缀</option>
+                <option value="svg">使用.svg后缀</option>
+                <option value="webp">使用.webp后缀</option>
+                <option value="custom">自定义后缀</option>
+            `;
+            
+            // 自定义后缀输入框
+            const customExtensionInput = document.createElement('input');
+            customExtensionInput.id = 'customExtensionInput';
+            customExtensionInput.className = 'form-control form-control-sm mt-2';
+            customExtensionInput.placeholder = '输入自定义后缀（不含点号）';
+            customExtensionInput.style.display = 'none';
+            
             // 如果不存在已添加过的格式选择器，则添加
             if (!document.getElementById('formatSelect')) {
                 const formatContainer = document.createElement('div');
                 formatContainer.className = 'mb-3';
                 formatContainer.innerHTML = `
-                    <label for="formatSelect" class="form-label">输出格式</label>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="formatSelect" class="form-label">输出格式</label>
+                            <div id="formatSelectContainer"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="extensionSelect" class="form-label">输出文件后缀</label>
+                            <div id="extensionSelectContainer"></div>
+                        </div>
+                    </div>
                 `;
-                formatContainer.appendChild(formatSelect);
                 
                 const resizeBtn = document.getElementById('resizeBtn');
                 resizeBtn.parentNode.insertBefore(formatContainer, resizeBtn);
+                
+                document.getElementById('formatSelectContainer').appendChild(formatSelect);
+                document.getElementById('extensionSelectContainer').appendChild(extensionSelect);
+                document.getElementById('extensionSelectContainer').appendChild(customExtensionInput);
+                
+                // 添加后缀选择事件监听
+                extensionSelect.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        customExtensionInput.style.display = 'block';
+                    } else {
+                        customExtensionInput.style.display = 'none';
+                    }
+                });
             }
             
             // 获取所选格式
@@ -1558,10 +1575,40 @@
                         const svgFile = file;
                         const svgUrl = URL.createObjectURL(svgFile);
                         
+                        // 获取用户指定的扩展名
+                        const extensionOption = document.getElementById('extensionSelect').value;
+                        
+                        // 确定文件扩展名
+                        let extension;
+                        if (extensionOption === 'auto') {
+                            extension = '.svg'; // SVG格式默认使用.svg扩展名
+                        } else if (extensionOption === 'original') {
+                            // 获取原始文件的扩展名
+                            const originalExt = file.name.split('.').pop();
+                            extension = originalExt ? '.' + originalExt : '.svg';
+                        } else if (extensionOption === 'custom') {
+                            // 使用用户自定义的扩展名
+                            const customExt = document.getElementById('customExtensionInput').value.trim();
+                            extension = customExt ? '.' + customExt.replace(/^\./, '') : '.svg';
+                        } else {
+                            // 使用用户选择的预设扩展名
+                            extension = '.' + extensionOption;
+                        }
+                        
+                        // 构建不含扩展名的文件名
+                        let fileName = file.name.substring(0, file.name.lastIndexOf('.'));
+                        // 移除原始扩展名
+                        if (fileName.lastIndexOf('.') !== -1) {
+                            fileName = fileName.substring(0, fileName.lastIndexOf('.'));
+                        }
+                        
+                        // 完整的文件名（带新扩展名）
+                        const newFileName = fileName + extension;
+                        
                         results.push({
                             original: file,
                             resized: svgFile, // 使用原始SVG文件
-                            name: file.name,
+                            name: newFileName,
                             url: svgUrl,
                             width: finalWidth,
                             height: finalHeight,
@@ -1591,14 +1638,33 @@
                         canvas.toBlob(resolve, mimeType, quality);
                     });
                     
+                    // 获取用户指定的扩展名
+                    const extensionOption = document.getElementById('extensionSelect').value;
+                    
                     // 确定文件扩展名
                     let extension;
-                    if (outputFormat === 'image/png') {
-                        extension = '.png';
-                    } else if (outputFormat === 'image/svg+xml') {
-                        extension = '.svg';
+                    if (extensionOption === 'auto') {
+                        // 根据输出格式自动选择扩展名
+                        if (outputFormat === 'image/png') {
+                            extension = '.png';
+                        } else if (outputFormat === 'image/svg+xml') {
+                            extension = '.svg';
+                        } else if (outputFormat === 'image/webp') {
+                            extension = '.webp';
+                        } else {
+                            extension = '.jpg';
+                        }
+                    } else if (extensionOption === 'original') {
+                        // 获取原始文件的扩展名
+                        const originalExt = file.name.split('.').pop();
+                        extension = originalExt ? '.' + originalExt : '.jpg';
+                    } else if (extensionOption === 'custom') {
+                        // 使用用户自定义的扩展名
+                        const customExt = document.getElementById('customExtensionInput').value.trim();
+                        extension = customExt ? '.' + customExt.replace(/^\./, '') : '.jpg';
                     } else {
-                        extension = '.jpg';
+                        // 使用用户选择的预设扩展名
+                        extension = '.' + extensionOption;
                     }
                     
                     // 构建不含扩展名的文件名
@@ -1608,10 +1674,13 @@
                         fileName = fileName.substring(0, fileName.lastIndexOf('.'));
                     }
                     
+                    // 完整的文件名（带新扩展名）
+                    const newFileName = fileName + extension;
+                    
                     results.push({
                         original: file,
                         resized: blob,
-                        name: file.name,
+                        name: newFileName,
                         url: URL.createObjectURL(blob),
                         width: finalWidth,
                         height: finalHeight,
@@ -1692,7 +1761,7 @@
                 downloadBtn.href = item.url;
                 downloadBtn.className = 'btn btn-sm btn-outline-primary';
                 downloadBtn.download = item.name;
-                downloadBtn.innerHTML = '<i class="bi bi-download"></i> 下载';
+                downloadBtn.innerHTML = `<i class="bi bi-download"></i> 下载 (${item.name.split('.').pop()})`;
                 
                 imgContainer.appendChild(img);
                 cardBody.appendChild(cardTitle);
