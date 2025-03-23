@@ -244,8 +244,18 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link active" href="#html5games">
+                        <a class="nav-link active" href="#html5games" data-target="html5games-section">
                             <i class="bi bi-globe me-1"></i>HTML5games网页
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#images" data-target="image-downloader-section">
+                            <i class="bi bi-images me-1"></i>图片下载器
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#resize" data-target="image-resize-section">
+                            <i class="bi bi-aspect-ratio me-1"></i>图片尺寸调整
                         </a>
                     </li>
                     <li class="nav-item">
@@ -263,53 +273,200 @@
             <!-- 左侧主要内容区域 -->
             <div class="col-lg-8">
                 <!-- HTML5游戏下载器 -->
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title">
-                            <i class="bi bi-globe me-2"></i>HTML5游戏链接获取
-                        </h5>
+                <div id="html5games-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">
+                                <i class="bi bi-globe me-2"></i>HTML5游戏链接获取
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-4">
+                                <button id="startBtn" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-play-fill me-2"></i>开始获取游戏链接
+                                </button>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div id="result"></div>
+                            <div class="text-center">
+                                <button id="downloadBtn" class="btn btn-success">
+                                    <i class="bi bi-download me-2"></i>下载结果
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="text-center mb-4">
-                            <button id="startBtn" class="btn btn-primary btn-lg">
-                                <i class="bi bi-play-fill me-2"></i>开始获取游戏链接
-                            </button>
+
+                    <!-- 最近获取记录 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">
+                                <i class="bi bi-clock-history me-2"></i>最近获取记录
+                            </h5>
                         </div>
-                        <div class="progress">
-                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
-                        </div>
-                        <div id="result"></div>
-                        <div class="text-center">
-                            <button id="downloadBtn" class="btn btn-success">
-                                <i class="bi bi-download me-2"></i>下载结果
-                            </button>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>时间</th>
+                                            <th>游戏数量</th>
+                                            <th>成功数</th>
+                                            <th>失败数</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="historyTable">
+                                        <!-- 历史记录将通过JavaScript动态添加 -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 最近获取记录 -->
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title">
-                            <i class="bi bi-clock-history me-2"></i>最近获取记录
-                        </h5>
+                <!-- 图片下载器部分 -->
+                <div id="image-downloader-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">
+                                <i class="bi bi-images me-2"></i>图片下载器
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="imageUrlInput" class="form-label">目标网页URL</label>
+                                <input type="text" class="form-control" id="imageUrlInput" placeholder="https://example.com">
+                            </div>
+                            <div class="text-center mb-4">
+                                <button id="startImageBtn" class="btn btn-primary">
+                                    <i class="bi bi-search me-2"></i>获取图片链接
+                                </button>
+                            </div>
+                            <div class="progress" id="imageProgress" style="display:none;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div id="imageResult" style="display:none;"></div>
+                            <div class="text-center mt-3">
+                                <button id="downloadImagesBtn" class="btn btn-success" style="display:none;">
+                                    <i class="bi bi-download me-2"></i>下载全部图片
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>时间</th>
-                                        <th>游戏数量</th>
-                                        <th>成功数</th>
-                                        <th>失败数</th>
-                                        <th>操作</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="historyTable">
-                                    <!-- 历史记录将通过JavaScript动态添加 -->
-                                </tbody>
-                            </table>
+
+                    <!-- 图片预览 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">
+                                <i class="bi bi-eye me-2"></i>图片预览
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="imagesPreview" style="display:none;">
+                                <h6>预览 (最多显示9张):</h6>
+                                <div class="row g-2 images-container">
+                                    <!-- 图片预览区域 -->
+                                </div>
+                            </div>
+                            <div class="text-center text-muted" id="no-preview">
+                                <i class="bi bi-image" style="font-size: 3rem;"></i>
+                                <p class="mt-2">获取图片后将在此处显示预览</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图片尺寸调整部分 -->
+                <div id="image-resize-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">
+                                <i class="bi bi-aspect-ratio me-2"></i>图片尺寸调整
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="imageUpload" class="form-label">上传图片</label>
+                                <input class="form-control" type="file" id="imageUpload" accept="image/*" multiple>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="widthInput" class="form-label">宽度 (像素)</label>
+                                    <input type="number" class="form-control" id="widthInput" placeholder="宽度" value="1280">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="heightInput" class="form-label">高度 (像素)</label>
+                                    <input type="number" class="form-control" id="heightInput" placeholder="高度" value="720">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="aspectRatio" id="noRatio" value="none">
+                                    <label class="form-check-label" for="noRatio">
+                                        自定义尺寸
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="aspectRatio" id="originalRatio" value="original">
+                                    <label class="form-check-label" for="originalRatio">
+                                        保持原图比例
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="aspectRatio" id="ratio16_9" value="16:9" checked>
+                                    <label class="form-check-label" for="ratio16_9">
+                                        16:9比例
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="aspectRatio" id="ratio4_3" value="4:3">
+                                    <label class="form-check-label" for="ratio4_3">
+                                        4:3比例
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="aspectRatio" id="ratio1_1" value="1:1">
+                                    <label class="form-check-label" for="ratio1_1">
+                                        1:1比例 (正方形)
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="progress mb-3" id="resizeProgress" style="display:none;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div class="text-center">
+                                <button id="resizeBtn" class="btn btn-primary">
+                                    <i class="bi bi-arrows-angle-expand me-2"></i>调整尺寸
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 图片预览 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">
+                                <i class="bi bi-eye me-2"></i>调整后预览
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="resizedImagesPreview" style="display:none;">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0">调整后预览:</h6>
+                                    <button id="downloadResizedBtn" class="btn btn-success btn-sm">
+                                        <i class="bi bi-download me-1"></i>下载全部
+                                    </button>
+                                </div>
+                                <div class="row g-2 resized-images-container">
+                                    <!-- 调整尺寸后的图片预览区域 -->
+                                </div>
+                            </div>
+                            <div class="text-center text-muted" id="no-resize-preview">
+                                <i class="bi bi-arrows-angle-expand" style="font-size: 3rem;"></i>
+                                <p class="mt-2">上传并调整图片后将在此处显示预览</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -367,7 +524,7 @@
                     </div>
                 </div>
 
-                <!-- 其他下载器占位 -->
+                <!-- 更新提示卡片 -->
                 <div class="card coming-soon">
                     <div class="card-header">
                         <h5 class="card-title">
@@ -591,6 +748,601 @@
 
         // 页面加载时显示历史记录
         updateHistoryTable();
+
+        // 导航切换功能
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if (!link.classList.contains('coming-soon')) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // 移除所有活跃状态
+                    document.querySelectorAll('.nav-link').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    
+                    // 添加活跃状态到当前点击项
+                    this.classList.add('active');
+                    
+                    // 隐藏所有内容区域
+                    document.querySelectorAll('#html5games-section, #image-downloader-section, #image-resize-section').forEach(section => {
+                        section.style.display = 'none';
+                    });
+                    
+                    // 显示目标内容区域
+                    const targetId = this.getAttribute('data-target');
+                    document.getElementById(targetId).style.display = 'block';
+                });
+            }
+        });
+
+        // 图片下载器功能
+        let imageLinks = [];
+        
+        document.getElementById('startImageBtn').addEventListener('click', async function() {
+            const imageUrl = document.getElementById('imageUrlInput').value.trim();
+            if (!imageUrl) {
+                alert('请输入目标网页URL');
+                return;
+            }
+            
+            const button = this;
+            const progress = document.getElementById('imageProgress');
+            const progressBar = progress.querySelector('.progress-bar');
+            const result = document.getElementById('imageResult');
+            const downloadBtn = document.getElementById('downloadImagesBtn');
+            const previewContainer = document.getElementById('imagesPreview');
+            const noPreview = document.getElementById('no-preview');
+            
+            button.disabled = true;
+            progress.style.display = 'block';
+            result.style.display = 'none';
+            downloadBtn.style.display = 'none';
+            previewContainer.style.display = 'none';
+            noPreview.style.display = 'block';
+            imageLinks = [];
+            
+            try {
+                // 获取网页内容
+                const html = await fetchWithCORS(imageUrl);
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // 获取所有图片元素
+                const imgElements = doc.querySelectorAll('img');
+                const baseUrl = new URL(imageUrl).origin;
+                
+                progressBar.style.width = '50%';
+                
+                // 处理图片链接
+                imgElements.forEach(img => {
+                    let src = img.getAttribute('src');
+                    if (src) {
+                        // 转换为绝对URL
+                        if (src.startsWith('//')) {
+                            src = 'https:' + src;
+                        } else if (src.startsWith('/')) {
+                            src = baseUrl + src;
+                        } else if (!src.startsWith('http')) {
+                            try {
+                                src = new URL(src, imageUrl).href;
+                            } catch (e) {
+                                console.error('无法解析URL:', src);
+                            }
+                        }
+                        
+                        // 过滤掉数据URI
+                        if (src && !src.startsWith('data:')) {
+                            // 查找图片下方的命名div
+                            let name = '';
+                            // 先检查父元素的下一个兄弟元素是否含有name类
+                            const parent = img.parentElement;
+                            if (parent) {
+                                // 遍历父元素的所有子元素，寻找img之后的div.name
+                                let foundImg = false;
+                                for (let i = 0; i < parent.children.length; i++) {
+                                    const child = parent.children[i];
+                                    if (foundImg && child.classList && child.classList.contains('name')) {
+                                        name = child.textContent.trim();
+                                        break;
+                                    }
+                                    if (child === img) {
+                                        foundImg = true;
+                                    }
+                                }
+                                
+                                // 如果没找到，检查父元素的下一个兄弟元素
+                                if (!name && parent.nextElementSibling) {
+                                    const nextSibling = parent.nextElementSibling;
+                                    if (nextSibling.classList && nextSibling.classList.contains('name')) {
+                                        name = nextSibling.textContent.trim();
+                                    }
+                                }
+                            }
+                            
+                            // 存储图片URL和名称
+                            imageLinks.push({
+                                url: src,
+                                name: name || `image_${imageLinks.length + 1}`
+                            });
+                        }
+                    }
+                });
+                
+                progressBar.style.width = '100%';
+                progressBar.classList.add('bg-success');
+                
+                // 显示结果
+                result.style.display = 'block';
+                result.className = 'success';
+                result.textContent = `共找到 ${imageLinks.length} 张图片`;
+                
+                if (imageLinks.length > 0) {
+                    downloadBtn.style.display = 'inline-block';
+                    previewContainer.style.display = 'block';
+                    updateImagePreview();
+                }
+                
+            } catch (error) {
+                result.style.display = 'block';
+                result.className = 'error';
+                result.textContent = '发生错误：' + error.message;
+                progressBar.style.width = '100%';
+                progressBar.classList.add('bg-danger');
+            } finally {
+                button.disabled = false;
+            }
+        });
+        
+        function updateImagePreview() {
+            const container = document.querySelector('.images-container');
+            container.innerHTML = '';
+            
+            // 最多显示9张预览图
+            const previewImages = imageLinks.slice(0, 9);
+            
+            previewImages.forEach(item => {
+                const col = document.createElement('div');
+                col.className = 'col-4';
+                
+                const imgContainer = document.createElement('div');
+                imgContainer.className = 'img-preview-container';
+                imgContainer.style.height = '100px';
+                imgContainer.style.overflow = 'hidden';
+                imgContainer.style.borderRadius = '8px';
+                imgContainer.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+                imgContainer.style.position = 'relative';
+                
+                const img = document.createElement('img');
+                img.src = item.url;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                
+                const nameOverlay = document.createElement('div');
+                nameOverlay.className = 'name-overlay';
+                nameOverlay.style.position = 'absolute';
+                nameOverlay.style.bottom = '0';
+                nameOverlay.style.left = '0';
+                nameOverlay.style.right = '0';
+                nameOverlay.style.padding = '5px';
+                nameOverlay.style.backgroundColor = 'rgba(0,0,0,0.6)';
+                nameOverlay.style.color = 'white';
+                nameOverlay.style.fontSize = '10px';
+                nameOverlay.style.overflow = 'hidden';
+                nameOverlay.style.textOverflow = 'ellipsis';
+                nameOverlay.style.whiteSpace = 'nowrap';
+                nameOverlay.textContent = item.name;
+                
+                imgContainer.appendChild(img);
+                imgContainer.appendChild(nameOverlay);
+                col.appendChild(imgContainer);
+                container.appendChild(col);
+            });
+            
+            // 隐藏默认提示，显示预览
+            document.getElementById('no-preview').style.display = 'none';
+            document.getElementById('imagesPreview').style.display = 'block';
+        }
+        
+        function downloadAllImages(items) {
+            // 使用JSZip进行打包下载
+            if (typeof JSZip === 'undefined') {
+                // 如果JSZip未加载，先加载JSZip库
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+                script.onload = function() {
+                    executeDownload(items);
+                };
+                document.head.appendChild(script);
+            } else {
+                executeDownload(items);
+            }
+        }
+        
+        function executeDownload(items) {
+            const zip = new JSZip();
+            const folder = zip.folder("images");
+            const downloadPromises = [];
+            
+            items.forEach((item, index) => {
+                // 获取文件扩展名
+                const url = item.url;
+                const extension = url.split('.').pop().split('?')[0] || 'jpg';
+                
+                // 处理文件名，移除非法字符
+                let filename = item.name.replace(/[\\/:*?"<>|]/g, '_');
+                // 如果文件名为空，使用index
+                if (!filename.trim()) {
+                    filename = `image_${index + 1}`;
+                }
+                // 添加扩展名
+                filename = `${filename}.${extension}`;
+                
+                // 添加到压缩包
+                const promise = fetch(url)
+                    .then(response => {
+                        if (response.ok) return response.blob();
+                        throw new Error(`无法下载图片: ${url}`);
+                    })
+                    .then(blob => {
+                        folder.file(filename, blob);
+                        return true;
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        return false;
+                    });
+                
+                downloadPromises.push(promise);
+            });
+            
+            // 进度显示
+            const result = document.getElementById('imageResult');
+            result.textContent = '正在准备下载...';
+            
+            Promise.all(downloadPromises).then(results => {
+                const successCount = results.filter(Boolean).length;
+                
+                zip.generateAsync({type:"blob"})
+                    .then(function(content) {
+                        // 使用FileSaver库下载
+                        if (typeof saveAs === 'undefined') {
+                            const script = document.createElement('script');
+                            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js';
+                            script.onload = function() {
+                                saveAs(content, "images.zip");
+                                result.textContent = `已下载 ${successCount}/${items.length} 张图片`;
+                            };
+                            document.head.appendChild(script);
+                        } else {
+                            saveAs(content, "images.zip");
+                            result.textContent = `已下载 ${successCount}/${items.length} 张图片`;
+                        }
+                    });
+            });
+        }
+
+        document.getElementById('downloadImagesBtn').addEventListener('click', function() {
+            if (imageLinks.length > 0) {
+                downloadAllImages(imageLinks);
+            }
+        });
+
+        // 图片尺寸调整功能
+        let uploadedImages = [];
+        let resizedImages = [];
+
+        // 监听宽度输入变化，根据选择的比例自动调整高度
+        document.getElementById('widthInput').addEventListener('input', function() {
+            const selectedRatio = document.querySelector('input[name="aspectRatio"]:checked').value;
+            const width = parseInt(this.value) || 0;
+            
+            if (selectedRatio === "16:9") {
+                const height = Math.round(width * 9 / 16);
+                document.getElementById('heightInput').value = height;
+            } else if (selectedRatio === "4:3") {
+                const height = Math.round(width * 3 / 4);
+                document.getElementById('heightInput').value = height;
+            } else if (selectedRatio === "1:1") {
+                document.getElementById('heightInput').value = width;
+            } else if (selectedRatio === "original" && uploadedImages.length > 0) {
+                // 如果选择了保持原图比例并且已经上传了图片，使用第一张图的比例
+                const firstImage = uploadedImages[0];
+                createImageFromFile(firstImage).then(img => {
+                    const ratio = img.height / img.width;
+                    const height = Math.round(width * ratio);
+                    document.getElementById('heightInput').value = height;
+                });
+            }
+            // 如果是自定义尺寸（none），则不自动调整高度
+        });
+
+        // 监听高度输入变化，根据选择的比例自动调整宽度
+        document.getElementById('heightInput').addEventListener('input', function() {
+            const selectedRatio = document.querySelector('input[name="aspectRatio"]:checked').value;
+            const height = parseInt(this.value) || 0;
+            
+            if (selectedRatio === "16:9") {
+                const width = Math.round(height * 16 / 9);
+                document.getElementById('widthInput').value = width;
+            } else if (selectedRatio === "4:3") {
+                const width = Math.round(height * 4 / 3);
+                document.getElementById('widthInput').value = width;
+            } else if (selectedRatio === "1:1") {
+                document.getElementById('widthInput').value = height;
+            } else if (selectedRatio === "original" && uploadedImages.length > 0) {
+                // 如果选择了保持原图比例并且已经上传了图片，使用第一张图的比例
+                const firstImage = uploadedImages[0];
+                createImageFromFile(firstImage).then(img => {
+                    const ratio = img.width / img.height;
+                    const width = Math.round(height * ratio);
+                    document.getElementById('widthInput').value = width;
+                });
+            }
+            // 如果是自定义尺寸（none），则不自动调整宽度
+        });
+
+        // 监听比例选择变化
+        document.querySelectorAll('input[name="aspectRatio"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const selectedRatio = this.value;
+                const widthInput = document.getElementById('widthInput');
+                const heightInput = document.getElementById('heightInput');
+                const width = parseInt(widthInput.value) || 1280;
+                
+                if (selectedRatio === "none") {
+                    // 自定义尺寸，不自动调整
+                    return;
+                } else if (selectedRatio === "16:9") {
+                    heightInput.value = Math.round(width * 9 / 16);
+                } else if (selectedRatio === "4:3") {
+                    heightInput.value = Math.round(width * 3 / 4);
+                } else if (selectedRatio === "1:1") {
+                    heightInput.value = width;
+                } else if (selectedRatio === "original" && uploadedImages.length > 0) {
+                    // 如果已上传图片，获取第一张图的原始比例
+                    const firstImage = uploadedImages[0];
+                    createImageFromFile(firstImage).then(img => {
+                        const ratio = img.height / img.width;
+                        heightInput.value = Math.round(width * ratio);
+                    });
+                }
+            });
+        });
+
+        // 监听图片上传
+        document.getElementById('imageUpload').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                uploadedImages = Array.from(e.target.files);
+                document.getElementById('resizeBtn').disabled = false;
+                
+                // 如果选择了保持原图比例，更新高度
+                const selectedRatio = document.querySelector('input[name="aspectRatio"]:checked').value;
+                if (selectedRatio === "original") {
+                    const firstImage = uploadedImages[0];
+                    const width = parseInt(document.getElementById('widthInput').value) || 1280;
+                    
+                    createImageFromFile(firstImage).then(img => {
+                        const ratio = img.height / img.width;
+                        document.getElementById('heightInput').value = Math.round(width * ratio);
+                    });
+                }
+            }
+        });
+
+        // 调整尺寸按钮点击事件
+        document.getElementById('resizeBtn').addEventListener('click', function() {
+            if (uploadedImages.length === 0) {
+                alert('请先上传图片');
+                return;
+            }
+
+            const width = parseInt(document.getElementById('widthInput').value) || 1280;
+            const height = parseInt(document.getElementById('heightInput').value) || 720;
+            
+            const button = this;
+            const progress = document.getElementById('resizeProgress');
+            const progressBar = progress.querySelector('.progress-bar');
+            
+            button.disabled = true;
+            progress.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressBar.classList.remove('bg-success', 'bg-danger');
+            
+            resizedImages = [];
+            resizeImages(uploadedImages, width, height)
+                .then(results => {
+                    resizedImages = results;
+                    updateResizedImagesPreview();
+                    progressBar.style.width = '100%';
+                    progressBar.classList.add('bg-success');
+                })
+                .catch(error => {
+                    console.error('调整尺寸时发生错误:', error);
+                    progressBar.style.width = '100%';
+                    progressBar.classList.add('bg-danger');
+                })
+                .finally(() => {
+                    button.disabled = false;
+                });
+        });
+
+        // 调整图片尺寸
+        async function resizeImages(images, targetWidth, targetHeight) {
+            const results = [];
+            const progress = document.getElementById('resizeProgress');
+            const progressBar = progress.querySelector('.progress-bar');
+            const selectedRatio = document.querySelector('input[name="aspectRatio"]:checked').value;
+            
+            for (let i = 0; i < images.length; i++) {
+                const file = images[i];
+                // 更新进度条
+                const progressPercent = (i / images.length) * 100;
+                progressBar.style.width = `${progressPercent}%`;
+                
+                try {
+                    // 创建图片对象并加载
+                    const image = await createImageFromFile(file);
+                    
+                    // 确定最终的宽度和高度
+                    let finalWidth = targetWidth;
+                    let finalHeight = targetHeight;
+                    
+                    // 如果选择了保持原图比例，则根据原图计算尺寸
+                    if (selectedRatio === "original") {
+                        const originalRatio = image.height / image.width;
+                        finalHeight = Math.round(finalWidth * originalRatio);
+                    }
+                    
+                    // 创建Canvas进行尺寸调整
+                    const canvas = document.createElement('canvas');
+                    canvas.width = finalWidth;
+                    canvas.height = finalHeight;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // 绘制图片到Canvas
+                    ctx.drawImage(image, 0, 0, finalWidth, finalHeight);
+                    
+                    // 获取调整后的图片
+                    const blob = await new Promise(resolve => {
+                        canvas.toBlob(resolve, file.type || 'image/jpeg');
+                    });
+                    
+                    results.push({
+                        original: file,
+                        resized: blob,
+                        name: file.name,
+                        url: URL.createObjectURL(blob),
+                        width: finalWidth,
+                        height: finalHeight
+                    });
+                } catch (error) {
+                    console.error(`调整图片 ${file.name} 失败:`, error);
+                }
+            }
+            
+            return results;
+        }
+
+        // 从文件创建图片对象
+        function createImageFromFile(file) {
+            return new Promise((resolve, reject) => {
+                const image = new Image();
+                image.onload = () => resolve(image);
+                image.onerror = reject;
+                image.src = URL.createObjectURL(file);
+            });
+        }
+
+        // 更新调整后的图片预览
+        function updateResizedImagesPreview() {
+            const container = document.querySelector('.resized-images-container');
+            const previewContainer = document.getElementById('resizedImagesPreview');
+            const noPreview = document.getElementById('no-resize-preview');
+            
+            container.innerHTML = '';
+            
+            if (resizedImages.length === 0) {
+                previewContainer.style.display = 'none';
+                noPreview.style.display = 'block';
+                return;
+            }
+            
+            resizedImages.forEach((item, index) => {
+                const col = document.createElement('div');
+                col.className = 'col-md-4 mb-3';
+                
+                const card = document.createElement('div');
+                card.className = 'card h-100';
+                card.style.overflow = 'hidden';
+                
+                const imgContainer = document.createElement('div');
+                imgContainer.style.height = '180px';
+                imgContainer.style.overflow = 'hidden';
+                
+                const img = document.createElement('img');
+                img.src = item.url;
+                img.className = 'card-img-top';
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                
+                const cardBody = document.createElement('div');
+                cardBody.className = 'card-body';
+                
+                const cardTitle = document.createElement('h6');
+                cardTitle.className = 'card-title text-truncate';
+                cardTitle.title = item.name;
+                cardTitle.textContent = item.name;
+                
+                const cardText = document.createElement('p');
+                cardText.className = 'card-text small text-muted';
+                cardText.textContent = `${item.width} × ${item.height}`;
+                
+                const downloadBtn = document.createElement('a');
+                downloadBtn.href = item.url;
+                downloadBtn.className = 'btn btn-sm btn-outline-primary';
+                downloadBtn.download = `resized_${item.name}`;
+                downloadBtn.innerHTML = '<i class="bi bi-download"></i> 下载';
+                
+                imgContainer.appendChild(img);
+                cardBody.appendChild(cardTitle);
+                cardBody.appendChild(cardText);
+                cardBody.appendChild(downloadBtn);
+                
+                card.appendChild(imgContainer);
+                card.appendChild(cardBody);
+                col.appendChild(card);
+                container.appendChild(col);
+            });
+            
+            previewContainer.style.display = 'block';
+            noPreview.style.display = 'none';
+        }
+
+        // 下载所有调整尺寸后的图片
+        document.getElementById('downloadResizedBtn').addEventListener('click', function() {
+            if (resizedImages.length === 0) {
+                return;
+            }
+            
+            // 使用JSZip进行打包下载
+            if (typeof JSZip === 'undefined') {
+                // 如果JSZip未加载，先加载JSZip库
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+                script.onload = function() {
+                    downloadResizedImages();
+                };
+                document.head.appendChild(script);
+            } else {
+                downloadResizedImages();
+            }
+        });
+
+        function downloadResizedImages() {
+            const zip = new JSZip();
+            const folder = zip.folder("resized_images");
+            
+            resizedImages.forEach((item, index) => {
+                folder.file(`resized_${item.name}`, item.resized);
+            });
+            
+            zip.generateAsync({type:"blob"})
+                .then(function(content) {
+                    // 使用FileSaver库下载
+                    if (typeof saveAs === 'undefined') {
+                        const script = document.createElement('script');
+                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js';
+                        script.onload = function() {
+                            saveAs(content, "resized_images.zip");
+                        };
+                        document.head.appendChild(script);
+                    } else {
+                        saveAs(content, "resized_images.zip");
+                    }
+                });
+        }
     </script>
 </body>
 </html> 
