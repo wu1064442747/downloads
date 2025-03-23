@@ -1195,7 +1195,12 @@
                 console.log(`下载图片: ${url}, 使用名称: ${filename}, 格式: ${extension}`);
                 
                 // 添加扩展名
-                filename = `${filename}.${extension}`;
+                let fileBaseName = filename;
+                // 如果文件名已有扩展名，先去掉
+                if (filename.includes('.')) {
+                    fileBaseName = filename.substring(0, filename.lastIndexOf('.'));
+                }
+                filename = `${fileBaseName}.${extension}`;
                 
                 // 构建不含扩展名的文件名
                 let fileName = filename.substring(0, filename.lastIndexOf('.'));
@@ -1207,20 +1212,49 @@
                             // 获取Content-Type
                             const contentType = response.headers.get('content-type');
                             return response.blob().then(blob => {
-                                // 根据用户选择决定是否需要转换
+                                // 检查是否为SVG格式
+                                const isSvgFormat = (
+                                    extension === 'svg' || 
+                                    (contentType && contentType.includes('image/svg+xml')) ||
+                                    (formatOption === 'svg' && formatOption !== 'jpg' && formatOption !== 'png')
+                                );
+                                
+                                // 如果是SVG格式，检查内容并处理
+                                if (isSvgFormat) {
+                                    return blob.text().then(text => {
+                                        // 检查文本内容是否包含SVG标记
+                                        const isSvgContent = text.trim().startsWith('<svg') || 
+                                                          text.includes('<svg ') || 
+                                                          (text.includes('<?xml') && text.includes('<svg'));
+                                        
+                                        if (isSvgContent) {
+                                            console.log('确认为SVG内容，保留SVG格式');
+                                            
+                                            // 确认为SVG，更新文件扩展名为svg
+                                            extension = 'svg';
+                                            const filenameBase = filename.substring(0, filename.lastIndexOf('.') > 0 ? filename.lastIndexOf('.') : filename.length);
+                                            filename = filenameBase + '.svg';
+                                            
+                                            console.log('文件将保存为:', filename);
+                                            
+                                            // 创建新的SVG blob
+                                            return new Blob([text], {type: 'image/svg+xml'});
+                                        } else {
+                                            console.log('内容不是SVG格式，使用默认处理');
+                                            return blob;
+                                        }
+                                    }).catch(err => {
+                                        console.error('SVG内容检测失败:', err);
+                                        return blob;
+                                    });
+                                }
+                                
+                                // 根据用户选择决定是否需要格式转换
                                 const needConversion = (
                                     formatOption === 'jpg' || 
                                     formatOption === 'png' ||
-                                    (formatOption === 'auto' && !contentType.includes('image/jpeg') && !contentType.includes('image/png') && !contentType.includes('image/svg+xml'))
+                                    (formatOption === 'auto' && !contentType.includes('image/jpeg') && !contentType.includes('image/png'))
                                 );
-                                
-                                // 检查是否为SVG格式
-                                const isSvgFormat = extension === 'svg' || contentType.includes('image/svg+xml');
-                                
-                                // 如果是SVG格式且不是强制转换为JPG/PNG，则直接使用原始数据
-                                if (isSvgFormat && formatOption !== 'jpg' && formatOption !== 'png') {
-                                    return blob;
-                                }
                                 
                                 if (needConversion) {
                                     return new Promise(resolve => {
@@ -1251,6 +1285,7 @@
                                         img.src = URL.createObjectURL(blob);
                                     });
                                 }
+                                
                                 return blob;
                             });
                         }
@@ -1275,6 +1310,9 @@
             Promise.all(downloadPromises).then(results => {
                 const successCount = results.filter(Boolean).length;
                 
+                // 统计各种文件类型的数量
+                const formatStats = {};
+                
                 // 更新图片统计信息
                 downloadedImages = successCount;
                 failedImages = items.length - successCount;
@@ -1288,12 +1326,12 @@
                             script.src = 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js';
                             script.onload = function() {
                                 saveAs(content, "images.zip");
-                                result.textContent = `已下载 ${successCount}/${items.length} 张图片`;
+                                result.textContent = `已下载 ${successCount}/${items.length} 张图片 (${formatOption === 'auto' ? '自动识别格式' : formatOption === 'svg' ? '保留SVG格式' : formatOption === 'jpg' ? '强制JPG格式' : '强制PNG格式'})`;
                             };
                             document.head.appendChild(script);
                         } else {
                             saveAs(content, "images.zip");
-                            result.textContent = `已下载 ${successCount}/${items.length} 张图片`;
+                            result.textContent = `已下载 ${successCount}/${items.length} 张图片 (${formatOption === 'auto' ? '自动识别格式' : formatOption === 'svg' ? '保留SVG格式' : formatOption === 'jpg' ? '强制JPG格式' : '强制PNG格式'})`;
                         }
                     });
             });
